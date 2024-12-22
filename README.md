@@ -1,4 +1,4 @@
-### ampere-os
+### mem0x-os
 An experimental x86_64 operating system.
 
 ## Build & Run Instructions
