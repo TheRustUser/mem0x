@@ -1,47 +1,43 @@
 arch ?= x86_64
-kernel := build/kernel-$(arch).elf
-os := build/os-$(arch).bin
+kernel := build/kernel-$(arch).bin
+iso := build/os-$(arch).iso
 
 linker_script := src/arch/$(arch)/linker.ld
-
-AS := $(arch)-elf-as
-LD := $(arch)-elf-ld
-
-CC := $(arch)-elf-gcc
-CFLAGS := -O2 -ffreestanding -Wall -Wextra -nostdlib -nostdinc -nostartfiles
-
-LDFLAGS := -T $(linker_script) -n -nostdlib
-
-OBJCOPY := $(arch)-elf-objcopy
-
-assembly_source_files := $(wildcard src/arch/$(arch)/*.S)
-assembly_object_files := $(patsubst src/arch/$(arch)/%.S, \
+grub_cfg := src/arch/$(arch)/grub.cfg
+assembly_source_files := $(wildcard src/arch/$(arch)/*.asm)
+assembly_object_files := $(patsubst src/arch/$(arch)/%.asm, \
 	build/arch/$(arch)/%.o, $(assembly_source_files))
 
 c_source_files := $(wildcard src/*.c)
 c_object_files := $(patsubst src/%.c, \
 	build/%.o, $(c_source_files))
 
-.PHONY: all clean run
+.PHONY: all clean run iso
 
-all: $(os)
+all: $(iso)
 
 clean:
 	@rm -r build
 
-run: $(os)
-	@qemu-system-$(arch) -drive format=raw,file=$(os)
+run: $(iso)
+	@qemu-system-x86_64 -cdrom $(iso)
+
+iso: $(iso)
+
+$(iso): $(kernel) $(grub_cfg)
+	@mkdir -p build/isofiles/boot/grub
+	@cp $(kernel) build/isofiles/boot/kernel.bin
+	@cp $(grub_cfg) build/isofiles/boot/grub
+	@grub-mkrescue -o $(iso) build/isofiles 2> /dev/null
+	@rm -r build/isofiles
 
 $(kernel): $(assembly_object_files) $(c_object_files) $(linker_script)
-	@$(LD) $(LDFLAGS) -o $(kernel) $(assembly_object_files) $(c_object_files)
+	@x86_64-elf-ld -nostdlib -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(c_object_files)
 
-$(os): $(kernel)
-	@$(OBJCOPY) $(kernel) -O binary $(os)
-
-build/arch/$(arch)/%.o: src/arch/$(arch)/%.S
+build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 	@mkdir -p $(shell dirname $@)
-	@$(AS) -c $< -o $@
+	@nasm -felf64 $< -o $@
 
 build/%.o: src/%.c
 	@mkdir -p $(shell dirname $@)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@x86_64-elf-gcc -O2 -ffreestanding -Wall -Wextra -nostdlib -c $< -o $@

@@ -1,23 +1,21 @@
 ENTRY(_start)
 
 SECTIONS {
-    . = 0x7C00;
+    . = 1M;
+
+    .boot : {
+        *(.multiboot2_header)
+    }
 
     .text : {
-        KEEP(*(.text._start))
-        *(.text .text.* .gnu.linkonce.t*)
+        *(.text)
+    }
+
+    .bss : {
+        *(.bss)
     }
 
     .rodata : {
         *(.rodata)
-    }
-
-    .data : {
-        *(.data)
-    }
-
-    .bss : {
-        *(.bss.stack)
-        *(.bss)
     }
 }
