@@ -40,6 +40,37 @@ vga_buffer_t* VGA_BUFFER = (vga_buffer_t*) VGA_BUFFER_ADDR;
 size_t VGA_COLUMN_POSITION = 0;
 vga_color_t VGA_COLOR_CODE = vga_color_code(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
 
+void vga_enable_cursor(uint8_t cursor_start, uint8_t cursor_end) {
+    outb(0x3D4, 0x0A);
+    outb(0x3D5, (inb(0x3D5) & 0xC0) | cursor_start);
+
+	outb(0x3D4, 0x0B);
+	outb(0x3D5, (inb(0x3D5) & 0xE0) | cursor_end);
+}
+
+void vga_disable_cursor(void) {
+	outb(0x3D4, 0x0A);
+	outb(0x3D5, 0x20);
+}
+
+void vga_update_cursor(int x, int y) {
+    uint16_t pos = y * VGA_TEXT_MODE_WIDTH + x;
+
+    outb(0x3D4, 0x0F);
+	outb(0x3D5, (uint8_t) (pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
+}
+
+uint16_t get_cursor_position(void) {
+    uint16_t pos = 0;
+    outb(0x3D4, 0x0F);
+    pos |= inb(0x3D5);
+    outb(0x3D4, 0x0E);
+    pos |= ((uint16_t)inb(0x3D5)) << 8;
+    return pos;
+}
+
 void vga_clear_row(size_t row) {
     for (size_t col = 0; col < VGA_TEXT_MODE_WIDTH; col++) {
         write_volatile(&VGA_BUFFER->characters[row][col].ascii_code, ' ');
@@ -57,6 +88,7 @@ void vga_new_line(void) {
 
     vga_clear_row(VGA_TEXT_MODE_HEIGHT - 1);
     VGA_COLUMN_POSITION = 0;
+    vga_update_cursor(VGA_COLUMN_POSITION, VGA_TEXT_MODE_HEIGHT - 1);
 }
 
 void vga_write_byte(uint8_t byte) {
@@ -79,13 +111,14 @@ void vga_write_byte(uint8_t byte) {
         write_volatile(&VGA_BUFFER->characters[row][col].ascii_code, byte);
         write_volatile(&VGA_BUFFER->characters[row][col].color_code, color);
         ++VGA_COLUMN_POSITION;
+        vga_update_cursor(VGA_COLUMN_POSITION, VGA_TEXT_MODE_HEIGHT - 1);
         break;
     };
 };
 
 void vga_write_string(const char* s) {
     while (*s) {
-        if (0x20 <= *s || *s <= 0x7E) {
+        if (0x20 <= *s && *s <= 0x7E) {
             vga_write_byte(*s);
         } else {
             vga_write_byte(0xFE);
@@ -95,12 +128,18 @@ void vga_write_string(const char* s) {
 }
 
 void vga_init(void) {
+    vga_disable_cursor();
+
     for (size_t row = 0; row < VGA_TEXT_MODE_HEIGHT; row++) {
         vga_clear_row(row);
     }
+
+    vga_enable_cursor(0, 15);
+    vga_update_cursor(0, VGA_TEXT_MODE_HEIGHT - 1);
 }
 
 void kprintf(const char* fmt, ...) {
+    char buffer[256];
     va_list args;
     va_start(args, fmt);
 
@@ -118,6 +157,16 @@ void kprintf(const char* fmt, ...) {
                 char c = (uint8_t)va_arg(args, unsigned int);
                 vga_write_byte(c);
                 break;
+            case 'x': {
+                int value = va_arg(args, int);
+                itoa(value, buffer, 16);
+                vga_write_string(buffer);
+            }
+            case 'u': {
+                unsigned int value = va_arg(args, unsigned int);
+                utoa(value, buffer, 10);
+                vga_write_string(buffer);
+            }
             case 'd':
                 break;
             default:

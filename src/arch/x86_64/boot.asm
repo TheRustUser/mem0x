@@ -6,6 +6,8 @@ EXTERN long_mode_start
 
 _start:
     mov esp, stack_top
+    mov edi, eax
+    mov esi, ebx
 
     call check_multiboot2
     call check_cpuid
@@ -20,10 +22,10 @@ _start:
     hlt
 
 error:
-    mov dword [0xb8000], 0x4f524f45
-    mov dword [0xb8004], 0x4f3a4f52
-    mov dword [0xb8008], 0x4f204f20
-    mov byte  [0xb800a], al
+    mov dword [0xB8000], 0x4F524F45
+    mov dword [0xB8004], 0x4F3A4F52
+    mov dword [0xB8008], 0x4F204F20
+    mov byte  [0xB800A], al
     hlt
 
 check_multiboot2:
@@ -125,7 +127,7 @@ page_directory_table:
 page_table:
     resb 4096
 stack_bottom:
-    resb 64
+    resb 4096 * 4
 stack_top:
 
 SECTION .rodata

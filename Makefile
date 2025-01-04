@@ -40,4 +40,4 @@ build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 
 build/%.o: src/%.c
 	@mkdir -p $(shell dirname $@)
-	@x86_64-elf-gcc -O2 -ffreestanding -Wall -Wextra -nostdlib -c $< -o $@
+	@x86_64-elf-gcc -O2 -ffreestanding -Wall -Wextra -nostdlib -c $< -o $@ -I $(HOME)/opt/include

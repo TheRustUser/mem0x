@@ -12,9 +12,6 @@ long_mode_start:
     mov fs, ax
     mov gs, ax
 
-    push rbx
-    push rax
-    
-    jmp kernel_start
+    call kernel_start
 
     hlt
