@@ -20,6 +20,8 @@ _start:
     jmp long_mode_global_descriptor_table.code:long_mode_start
 
     hlt
+.halt:
+    jmp .halt
 
 error:
     mov dword [0xB8000], 0x4F524F45

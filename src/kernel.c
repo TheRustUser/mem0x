@@ -1,69 +1,70 @@
-#include "vga.h"
-#include "lib.h"
+#include <dri/vga.h>
+#include <stdio.h>
+#include <multiboot2.h>
+#include <elf.h>
+#include <interrupt.h>
 
-#include <stdbool.h>
-#include "multiboot2.h"
+#define MULTIBOOT2_MAGIC 0x36D76289
 
-
-
-void kernel_start(unsigned long magic, unsigned long addr) {
-
-    struct multiboot_tag* tag;
-    unsigned size;
+void kernel_start(unsigned long multiboot2_magic_number, unsigned long multiboot2_information_address) {
 
     vga_init();
 
-    if (magic != MULTIBOOT2_MAGIC) {
-        kprintf("ERROR: Invalid Multiboot2 Magic: 0x%x\n", magic);
-        while (true);
+    if (multiboot2_magic_number != MULTIBOOT2_MAGIC) {
+        printf("ERROR: Invalid Multiboot2 Magic! 0x%x\n", multiboot2_magic_number);
+        __asm__ volatile("cli");
+        __asm__ volatile("hlt");
     }
 
-    kprintf("Multiboot2 Magic: 0x%x\n", magic);
+    printf("Multiboot2 Magic Number: 0x%x\n", multiboot2_magic_number);
 
-    if (addr & 7) {
-        kprintf("Unaligned Multiboot Information: 0x%x\n", addr);
-        while (true);
+    if (multiboot2_information_address & 7) {
+        printf("ERROR: Unaligned Multiboot Information 0x%x\n", multiboot2_information_address);
     }
 
-    kprintf("Multiboot Information Address: 0x%x\n", addr);
+    size_t size = *(size_t*)multiboot2_information_address;
 
-    size = *(unsigned*) addr;
-    kprintf("Multiboot Information Size: 0x%x\n", size);
-    for (tag = (struct multiboot_tag*)(addr + 8); tag->type != MULTIBOOT_TAG_TYPE_END; tag = (struct multiboot_tag *) ((multiboot_uint8_t *) tag + ((tag->size + 7) & ~7))) {
+
+    printf("Multiboot2 Information  Address: 0x%x | Size: 0x%x\n", multiboot2_information_address, size);
+    struct multiboot_tag* tag;
+    for (tag = (struct multiboot_tag*)(multiboot2_information_address + 8); tag->type != MULTIBOOT_TAG_TYPE_END; tag = (struct multiboot_tag *)((multiboot_uint8_t *) tag + ((tag->size + 7) & ~7))) {
         switch(tag->type) {
-        case MULTIBOOT_TAG_TYPE_CMDLINE:
-            kprintf("Command Line: %s\n", ((struct multiboot_tag_string*)tag)->string);
-            break;
-        case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME:
-            kprintf("Bootloader Name: %s\n", ((struct multiboot_tag_string*)tag)->string);
-            break;
-        case MULTIBOOT_TAG_TYPE_MODULE:
-            kprintf("Module at: 0x%x-0x%x | Command Line: %s\n", ((struct multiboot_tag_module*)tag)->mod_start, ((struct multiboot_tag_module*)tag)->mod_end, ((struct multiboot_tag_module*)tag)->cmdline);
-            break;
-        case MULTIBOOT_TAG_TYPE_BASIC_MEMINFO:
-            kprintf("mem_lower: %uKB, mem_upper: %uKB\n", ((struct multiboot_tag_basic_meminfo*)tag)->mem_lower, ((struct multiboot_tag_basic_meminfo*)tag)->mem_upper);
-            break;
-        case MULTIBOOT_TAG_TYPE_BOOTDEV:
-            kprintf("Boot Device: 0x%x, %u, %u\n", ((struct multiboot_tag_bootdev*)tag)->biosdev, ((struct multiboot_tag_bootdev*)tag)->slice, ((struct multiboot_tag_bootdev*)tag)->part);
-            break;
         case MULTIBOOT_TAG_TYPE_MMAP:
             multiboot_memory_map_t* mmap;
-            
-            kprintf("Memory Areas:\n");
 
+            printf("Memory Areas:\n");
             for (mmap = ((struct multiboot_tag_mmap*)tag)->entries; (multiboot_uint8_t*)mmap < (multiboot_uint8_t*)tag + tag->size; mmap = (multiboot_memory_map_t*)((unsigned long)mmap + ((struct multiboot_tag_mmap*)tag)->entry_size)) {
-                kprintf("Base Addr: 0x%x%x | Length: 0x%x%x | Type: 0x%x\n", (unsigned)(mmap->addr >> 32), (unsigned)(mmap->addr & 0xFFFFFFFF), (unsigned)(mmap->len >> 32), (unsigned)(mmap->len & 0xFFFFFFFF), (unsigned)mmap->type);
-            } 
+                printf("Base Addr: 0x%x%x | Length: 0x%x%x | Type: 0x%x\n", (unsigned)(mmap->addr >> 32), (unsigned)(mmap->addr & 0xFFFFFFFF), (unsigned)(mmap->len >> 32), (unsigned)(mmap->len & 0xFFFFFFFF), (unsigned)mmap->type);
+            }
             break;
+        case MULTIBOOT_TAG_TYPE_ELF_SECTIONS:
+            struct multiboot_tag_elf_sections* elf_sections_tag = ((struct multiboot_tag_elf_sections*)tag);
+
+            size_t num_sections = elf_sections_tag->num;
+            size_t section_size = elf_sections_tag->entsize;
+
+            void *sections = (void*)((uint8_t*)elf_sections_tag + sizeof(struct multiboot_tag_elf_sections));
+
+            printf("Kernel ELF Sections:\n");
+
+            for (size_t i = 0; i < num_sections; i++) {
+                uint8_t *current_section = (uint8_t*)sections + i * section_size;
+
+                Elf64_Shdr* section_header = (Elf64_Shdr*)current_section;
+
+                printf("    Addr: 0x%x%x | Size: 0x%x%x | Flags: 0x%x\n"
+                    , (unsigned)(section_header->sh_addr >> 32)
+                    , (unsigned)(section_header->sh_addr & 0xFFFFFFFF)
+                    , (unsigned)(section_header->sh_size >> 32)
+                    , (unsigned)(section_header->sh_size & 0xFFFFFFFF)
+                    , (unsigned)(section_header->sh_flags));
+            }
         }
     }
 
-    tag = (struct multiboot_tag*) ((multiboot_uint8_t*)tag + ((tag->size + 7) & ~7));
-    kprintf("Total Multiboot Information Size: 0x%x\n", (unsigned) tag - addr);
-    
+    __asm__ volatile("cli");
 
-    kprintf("Hello, World!\n");
-    kprintf("Newline!");
+    idt_init();
 
-    while (true);
+    printf("Hello, World!\n%s\n", "Hello, VGA!");
 }

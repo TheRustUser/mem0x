@@ -4,17 +4,17 @@ These are things to implement for mem0x.
 
 ### Todo
 
-- [ ] Read Sectors that are after 512 Bytes.
-- [ ] Create Memory Map, set up E820.
-- [ ] Check Protected Mode CPUID Instruction & Check if Long Mode is Available on the System.
-- [ ] Enable Paging, and Set up the GDT, IDT to Jump to Long Mode.
-- [ ] Jump to kernel_start (C code).
+- [ ] Handle Time Interrupt
+- [ ] Get Keyboard Interrupt & Implement a scanf-like Function
+- [ ] Implement Page Frame Allocator
+- [ ] Handle Double Fault
 
 ### In Progress
 
-- [ ] Set up GDT and enter to Protected Mode.
+- [ ] Handle Time Interrupt
 
 ### Done ✓
 
-- [x] Implement BIOS Print in Read Mode.
-- [x] Enable A20 Line
+- [x] Implement printf-like Function
+- [x] Load IDT
+- [x] Separate Source like C Standard Library

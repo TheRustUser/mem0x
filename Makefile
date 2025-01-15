@@ -8,9 +8,12 @@ assembly_source_files := $(wildcard src/arch/$(arch)/*.asm)
 assembly_object_files := $(patsubst src/arch/$(arch)/%.asm, \
 	build/arch/$(arch)/%.o, $(assembly_source_files))
 
-c_source_files := $(wildcard src/*.c)
+c_source_files := $(wildcard src/*.c) $(wildcard src/**/*.c)
 c_object_files := $(patsubst src/%.c, \
 	build/%.o, $(c_source_files))
+
+CFLAGS := -std=gnu99 -ffreestanding -Wall -Wextra -nostdlib -nostdinc -nostartfiles -g
+INCLUDE := -I./include -I./src/lib -I./src
 
 .PHONY: all clean run iso
 
@@ -32,7 +35,7 @@ $(iso): $(kernel) $(grub_cfg)
 	@rm -r build/isofiles
 
 $(kernel): $(assembly_object_files) $(c_object_files) $(linker_script)
-	@x86_64-elf-ld -nostdlib -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(c_object_files)
+	@x86_64-elf-ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(c_object_files)
 
 build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 	@mkdir -p $(shell dirname $@)
@@ -40,4 +43,4 @@ build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 
 build/%.o: src/%.c
 	@mkdir -p $(shell dirname $@)
-	@x86_64-elf-gcc -O2 -ffreestanding -Wall -Wextra -nostdlib -c $< -o $@ -I $(HOME)/opt/include
+	@x86_64-elf-gcc $(CFLAGS) $(INCLUDE) -c $< -o $@
