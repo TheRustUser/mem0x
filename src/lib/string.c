@@ -1,19 +1,19 @@
 #include <string.h>
 #include <stdbool.h>
 
-size_t strlen(const char* fmt) {
+size_t strlen(const char *fmt) {
     if (!fmt) {
         return 0;
     }
 
-    const char* s;
+    const char *s;
     for (s = fmt; *s; ++s);
 
     return (s - fmt);
 }
 
-char* itoa (char *buf, int base, int d) {
-    char* p = buf;
+char *itoa (char *buf, int base, int d) {
+    char *p = buf;
     char *p1, *p2;
     unsigned long ud = d;
     int divisor = 10;

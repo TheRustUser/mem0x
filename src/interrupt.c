@@ -36,8 +36,8 @@ void exception_handler(void) {
     __asm__ volatile("cli; hlt");
 }
 
-void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags) {
-    idt_entry_t* descriptor = &IDT[vector];
+void idt_set_descriptor(uint8_t vector, void *isr, uint8_t flags) {
+    idt_entry_t *descriptor = &IDT[vector];
 
     descriptor->isr_low = (uint64_t)isr & 0xFFFF;
     descriptor->kernel_cs = 0x08;
@@ -50,7 +50,7 @@ void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags) {
 
 static bool vectors[IDT_MAX_DESCRIPTORS];
 
-extern void* isr_stub_table[];
+extern void *isr_stub_table[];
 
 void idt_init(void) {
     IDTR.base = (uintptr_t)&IDT[0];

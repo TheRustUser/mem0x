@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-size_t strlen(const char* fmt);
+size_t strlen(const char *fmt);
 
 char* itoa (char *buf, int base, int d);
 

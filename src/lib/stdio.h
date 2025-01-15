@@ -4,7 +4,7 @@
 #include <dri/vga.h>
 #include <string.h>
 
-extern void vga_write_string(const char* fmt, size_t len, ...);
+extern void vga_write_string(const char *fmt, size_t len, ...);
 
 #define printf(fmt, ...) vga_write_string(fmt, strlen(fmt), ##__VA_ARGS__)
 

@@ -17,7 +17,7 @@
 #define vga_color_code(foreground, background) (background << 4 | foreground)
 
 void write_volatile(uintptr_t address, uint8_t value) {
-    *(volatile uintptr_t*)address = value;
+    *(volatile uintptr_t *)address = value;
 }
 
 typedef enum {
@@ -48,7 +48,7 @@ typedef struct {
     vga_character_t buffer[VGA_HEIGHT][VGA_WIDTH];
 } vga_buffer_t;
 
-vga_buffer_t* VGA = (vga_buffer_t*)VGA_ADDRESS;
+vga_buffer_t *VGA = (vga_buffer_t *)VGA_ADDRESS;
 size_t VGA_COLUMN_POSITION = 0;
 vga_color_t VGA_COLOR_CODE = vga_color_code(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
 
@@ -125,7 +125,7 @@ void vga_write_string(const char* fmt, size_t len, ...) {
         if (fmt[i] == '%' && fmt[i + 1]) {
             i++;
             if (fmt[i] == 's') {
-                const char* buf = va_arg(args, char*);
+                const char *buf = va_arg(args, char *);
                 
                 while (*buf) {
                     vga_write_byte(*buf++);
