@@ -8,6 +8,10 @@
 
 void kernel_start(unsigned long multiboot2_magic_number, unsigned long multiboot2_information_address) {
 
+    disable_interrupts();
+
+    idt_init();
+
     vga_init();
 
     if (multiboot2_magic_number != MULTIBOOT2_MAGIC) {
@@ -48,7 +52,7 @@ void kernel_start(unsigned long multiboot2_magic_number, unsigned long multiboot
             printf("Kernel ELF Sections:\n");
 
             for (size_t i = 0; i < num_sections; i++) {
-                uint8_t *current_section = (uint8_t*)sections + i * section_size;
+                uint64_t *current_section = (uint64_t*)sections + i * section_size;
 
                 Elf64_Shdr* section_header = (Elf64_Shdr*)current_section;
 
@@ -61,10 +65,6 @@ void kernel_start(unsigned long multiboot2_magic_number, unsigned long multiboot
             }
         }
     }
-
-    __asm__ volatile("cli");
-
-    idt_init();
 
     printf("Hello, World!\n%s\n", "Hello, VGA!");
 }

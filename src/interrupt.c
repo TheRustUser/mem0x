@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <dri/io.h>
 
+void disable_interrupts(void) {
+    __asm__ volatile("cli");
+}
+
 #define IDT_MAX_DESCRIPTORS 256
 
 typedef struct {

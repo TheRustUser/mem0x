@@ -1,7 +1,7 @@
 #ifndef __STDBOOL_H
 #define __STDBOOL_H
 
-typedef char bool;
+typedef _Bool bool;
 
 #define true 1
 #define false 0
