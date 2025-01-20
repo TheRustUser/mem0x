@@ -164,6 +164,9 @@ void vga_init(void) {
     for (size_t row = 0; row < VGA_HEIGHT; row++) {
         vga_clear_row(row);
     }
+
+    vga_enable_cursor(1, 15);
+    vga_update_cursor(VGA_COLUMN_POSITION, VGA_HEIGHT - 1);
 }
 
 #endif

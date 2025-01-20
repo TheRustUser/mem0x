@@ -15,7 +15,7 @@ c_object_files := $(patsubst src/%.c, \
 CFLAGS := -std=gnu99 -ffreestanding -Wall -Wextra -nostdlib -nostdinc -nostartfiles -g
 INCLUDE := -I./include -I./src/lib -I./src
 
-.PHONY: all clean run iso
+.PHONY: all clean run iso bootloader
 
 all: $(iso)
 
@@ -35,7 +35,7 @@ $(iso): $(kernel) $(grub_cfg)
 	@rm -r build/isofiles
 
 $(kernel): $(assembly_object_files) $(c_object_files) $(linker_script)
-	@x86_64-elf-ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(c_object_files)
+	@x86_64-elf-ld --gc-sections -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(c_object_files)
 
 build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 	@mkdir -p $(shell dirname $@)

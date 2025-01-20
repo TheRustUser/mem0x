@@ -6,8 +6,7 @@ EXTERN long_mode_start
 
 _start:
     mov esp, stack_top
-    mov edi, eax
-    mov esi, ebx
+    mov edi, ebx
 
     call check_multiboot2
     call check_cpuid
