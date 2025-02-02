@@ -1,4 +1,4 @@
-### mem0x-os
+### mem0x
 An experimental x86_64 operating system.
 
 ## Build & Run Instructions
