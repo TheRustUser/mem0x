@@ -15,7 +15,7 @@ c_object_files := $(patsubst src/%.c, \
 CFLAGS := -std=gnu99 -ffreestanding -Wall -Wextra -nostdlib -nostdinc -nostartfiles -g
 INCLUDE := -I./include -I./src/lib -I./src
 
-.PHONY: all clean run iso bootloader
+.PHONY: all clean run debug iso
 
 all: $(iso)
 
@@ -24,6 +24,9 @@ clean:
 
 run: $(iso)
 	@qemu-system-x86_64 -cdrom $(iso)
+
+debug: $(iso)
+	@qemu-system-x86_64 -cdrom $(iso) -s -S
 
 iso: $(iso)
 

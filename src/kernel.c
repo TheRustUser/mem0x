@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <multiboot2.h>
 #include <elf.h>
+#include <cpu/idt.h>
 
 void kernel_start(unsigned long multiboot2_information_address) {
 
+    idt_init();
     vga_init();
 
     if (multiboot2_information_address & 7) {
@@ -20,7 +22,7 @@ void kernel_start(unsigned long multiboot2_information_address) {
             printf("Memory Areas:\n");
             for (mmap = ((struct multiboot_tag_mmap *)tag)->entries; (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size; mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size)) {
                 if (mmap->type == 0x1) {
-                    printf("    Start: 0x%x%x | Length: 0x%x%x\n", (unsigned)(mmap->addr >> 32), (unsigned)(mmap->addr & 0xffffffff), (unsigned)(mmap->len >> 32), (unsigned)(mmap->len & 0xffffffff), mmap->type);
+                    printf("    Start: 0x%x | Length: 0x%x\n", mmap->addr, mmap->len, mmap->type);
                 }
             }
             break;
@@ -28,7 +30,6 @@ void kernel_start(unsigned long multiboot2_information_address) {
             struct multiboot_tag_elf_sections *elf_sections_tag = ((struct multiboot_tag_elf_sections *)tag);
 
             size_t num_sections = elf_sections_tag->num;
-            size_t section_size = elf_sections_tag->entsize;
 
             printf("Kernel Sections:\n");
 
@@ -42,6 +43,8 @@ void kernel_start(unsigned long multiboot2_information_address) {
             break;
         }
     }
+
+    *(uintptr_t *)0xdeadbeef = 0x01;
 
     printf("Hello, World!\n%s\n", "Hello, VGA!");
 }

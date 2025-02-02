@@ -134,9 +134,9 @@ void vga_write_string(const char* fmt, size_t len, ...) {
                 const char buf = (char)va_arg(args, int);
                 vga_write_byte(buf);
             } else if (fmt[i] == 'x') {
-                int value = va_arg(args, int);
+                unsigned int value = va_arg(args, unsigned int);
                 char buf[256];
-                itoa(buf, fmt[i], value);
+                utoa(buf, fmt[i], value);
 
                 for (size_t i = 0; i < strlen(buf); i++) {
                     vga_write_byte(buf[i]);

@@ -5,7 +5,7 @@ GLOBAL long_mode_start
 EXTERN kernel_start
 
 long_mode_start:
-    xor ax, ax
+    mov ax, 0x10
     mov ss, ax
     mov ds, ax
     mov es, ax

@@ -133,9 +133,19 @@ stack_top:
 
 SECTION .rodata
 long_mode_global_descriptor_table:
+.null: equ $ - long_mode_global_descriptor_table
     dq 0
 .code: equ $ - long_mode_global_descriptor_table
     dq (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53)
+.data: equ $ - long_mode_global_descriptor_table
+    dd 0xffff
+    db 0
+    db (1 << 7) | (1 << 4) | (1 << 1)
+    db (1 << 7) | (1 << 6) | (1 << 5)
+    db 0
+.tss: equ $ - long_mode_global_descriptor_table
+    dd 0x00000068
+    dd 0x00CF8900
 .pointer:
     dw $ - long_mode_global_descriptor_table - 1
     dq long_mode_global_descriptor_table
